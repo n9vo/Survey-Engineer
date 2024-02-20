@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            padding: 3rem;
+            font-size: 16px;
+            }
+
+            textarea {
+            width: 100%;
+            min-height: 30rem;
+            font-family: "Lucida Console", Monaco, monospace;
+            font-size: 0.8rem;
+            line-height: 1.2;
+            }
+    </style>
+</head>
+<body>
+    <h1 style = "display:none" id = "JSON"> {{ JSON }} </h1>
+
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+
+    <form action = "/update" method = "POST">
+        <textarea name="json" id="myTextarea" cols="30" rows="10"></textarea>
+        <input type = "text" placeholder = "Change anything?" name = "prompt"></input>
+        <button type = "submit">DO IT</button>
+    </form>
+    
+    <a href="/">
+        <button>CLick here to generate another survey</button>
+    </a>
+  
+    <script>
+        window.onload = function() {
+            var data = JSON.parse(document.getElementById("JSON").textContent);
+
+            console.log(data);
+
+            var textedJson = JSON.stringify(data, undefined, 2);
+
+            document.getElementById('myTextarea').textContent = textedJson;
+
+
+        }
+    </script>
+</body>
+</html>
