@@ -1,0 +1,19 @@
+{
+    "survey_name": "here goes whatever name you think is fitting for the survey based on the questions",
+    "questions" : [
+        {
+            "prompt" : "name of question",
+            "id": "id of question, just an increment of the question #",
+            "type" : "voice_recording, multiple_choice, free_response, boolean, or slider (depending on how the user describes the question)",
+            "choices" : ["choices specified by user, if they want it to be multiple choice, if not, leave out this field", "choice2", "choice3", "etc"],
+            "slider_min": "minimum range of slider",
+            "slider_max": "max range of slider",
+            "voice_recording_duration_min": "min duration of users voice recording",
+            "voice_recording_duration_max": "max duration of users voice recording",
+            "voice_recording_duration_desired": "desired duration of users voice recording",
+        }
+
+
+    ]
+
+}
