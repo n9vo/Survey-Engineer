@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-SurveyEngineer is an open-source tool designed to create, manage, and analyze surveys using AI-driven prompts. It simplifies the process of survey generation by converting user descriptions into structured JSON data.
+SurveyEngineer is a proof-of-concept open-source tool designed to create, manage, and analyze surveys using AI-driven prompts. It simplifies the process of survey generation by converting natural language input from the user into structured JSON data.
 
 ## Features
 
