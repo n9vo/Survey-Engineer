@@ -26,9 +26,9 @@ To install and run SurveyEngineer, follow these steps:
     pip install -r requirements.txt
     ```
 
-3. Set up your OpenAI API key as an environment variable:
-    ```sh
-    export api_key=your_openai_api_key
+3. Fill in your OpenAI credentials on line 9 of main.py:
+    ```py
+    client = OpenAI(organization="", api_key="")
     ```
 
 4. Start the application:
