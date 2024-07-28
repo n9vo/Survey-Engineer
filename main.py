@@ -6,7 +6,7 @@ key = os.environ["api_key"]
 
 app = Flask(__name__)
 
-client = OpenAI(organization='org-vFZ8y58ECBxPk2tgiSl7dMAD', api_key=key)
+client = OpenAI(organization="", api_key="")
 
 _format = open("example.json", "r").read()
 
