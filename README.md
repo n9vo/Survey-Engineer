@@ -11,6 +11,9 @@ SurveyEngineer is a proof-of-concept open-source tool designed to create and edi
 - **Real-Time Survey Editing**: Update and modify existing surveys based on user input while maintaining the original format.
 - **Web Interface**: User-friendly web interface built with Flask to create and manage surveys.
 
+## Requirements
+- **Python**: All you need is an up-to-date installation of python on your machine.
+  
 ## Installation
 
 To install and run SurveyEngineer, follow these steps:
