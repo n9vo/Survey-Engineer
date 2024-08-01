@@ -8,12 +8,10 @@ app = Flask(__name__)
 
 client = OpenAI(organization="", api_key="")
 
-_format = open("example.json", "r").read()
+_format = open("format.json", "r").read()
 
 
 async def generate(prompt, engineer):
-  _format = str(open("example.json", "r").read())
-
   response = client.chat.completions.create(model="gpt-3.5-turbo",
                                             messages=[{
                                                 "role": "system",
@@ -79,7 +77,7 @@ async def update():
       prompt,
       'Your job is to modify the following json according to the user input, but ONLY do what the user tells you to. If you are not told to remove something, dont remove it. Only change, add, or remove, what the user tells you to: '
       + json +
-      " And this is the format of how the surveys can be constructed: " +
+      " And this is the format of how the surveys are constructed: " +
       _format)
 
   return render_template("json.html", JSON=data)
