@@ -2,11 +2,11 @@ from flask import Flask, redirect, render_template, request
 from openai import OpenAI
 import json, os
 
-key = os.environ["api_key"]
 
 app = Flask(__name__)
 
-client = OpenAI(organization="", api_key="")
+
+client = OpenAI(api_key="")
 
 _format = open("format.json", "r").read()
 
