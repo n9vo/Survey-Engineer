@@ -1,86 +1,91 @@
-from flask import Flask, redirect, render_template, request
-from openai import OpenAI
-import json, os
+import os
+import json
+from typing import Dict
+
+from flask import Flask, render_template, request, abort
+from openai import OpenAI, OpenAIError
+
+app = Flask(__name__, static_folder='static', template_folder='templates')
+
+# Load survey format
+FORMAT_PATH = os.getenv('FORMAT_JSON_PATH', 'format.json')
+try:
+    with open(FORMAT_PATH, 'r', encoding='utf-8') as f:
+        SURVEY_FORMAT = json.load(f)
+except (OSError, json.JSONDecodeError) as exc:
+    raise RuntimeError(f"Failed to load survey format from {FORMAT_PATH}") from exc
+
+# Initialize OpenAI client
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY') or abort(500, description="OpenAI API key not configured")
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 
-app = Flask(__name__)
+def sanitize_json(text: str) -> str:
+    """
+    Ensure valid JSON by replacing single quotes in content fields.
+    """
+    # Replace problematic apostrophes not part of JSON syntax
+    return text.replace("'", '"')
 
 
-client = OpenAI(api_key="")
+async def generate_survey(prompt: str, system_prompt: str) -> Dict:
+    """
+    Calls OpenAI to generate survey JSON based on user prompt.
+    """
+    try:
+        res = await client.chat.completions.create(
+            model='gpt-3.5-turbo',
+            messages=[
+                {'role': 'system', 'content': system_prompt},
+                {'role': 'user', 'content': prompt},
+            ],
+        )
+    except OpenAIError as exc:
+        abort(502, description=f"AI service error: {exc}")
 
-_format = open("format.json", "r").read()
-
-
-async def generate(prompt, engineer):
-  response = client.chat.completions.create(model="gpt-3.5-turbo",
-                                            messages=[{
-                                                "role": "system",
-                                                "content": engineer
-                                            }, {
-                                                "role": "user",
-                                                "content": prompt
-                                            }])
-
-  name = json.loads(response.choices[0].message.content)['survey_name']
-
-  data = str(json.loads(response.choices[0].message.content))
-
-  json_chars = ['{', '}', ",", " ", ":", '[', ']']
-  bad_indexes = []
-
-  i = 0
-  for char in (data):
-    if char == "'":
-      if not (data)[i - 1] in json_chars and not (data)[i + 1] in json_chars:
-        bad_indexes.append(i)
-
-    i = i + 1
-
-  data_arr = []
-
-  for char in data:
-    data_arr.append(char)
-
-  for index in bad_indexes:
-    data_arr[index] = ""
-
-  data = ""
-  for char in data_arr:
-    data += char
-
-  return (data.replace("'", '"'))
+    content = res.choices[0].message.content
+    # Sanitize and parse JSON
+    sanitized = sanitize_json(content)
+    try:
+        return json.loads(sanitized)
+    except json.JSONDecodeError as exc:
+        abort(500, description="AI returned malformed JSON")
 
 
-@app.route('/')
-def main():
-  return render_template("index.html", **locals())
+@app.route('/', methods=['GET'])
+def index():
+    """Render the homepage with prompt input."""
+    return render_template('index.html')
 
 
 @app.route('/submit', methods=['POST'])
 async def submit():
-  prompt = request.form['prompt']
+    """Generate new survey JSON based on user prompt."""
+    prompt = request.form.get('prompt') or abort(400, description="Missing prompt")
+    system_prompt = (
+        'You are an assistant that takes a user description of a survey and outputs valid JSON '
+        f'using this format: {json.dumps(SURVEY_FORMAT)}. Never use single quotes in JSON.'
+    )
 
-  data = await generate(
-      prompt,
-      'You are an assistant capable of taking a users description of a survey, and turning it into json data (NEVER USE APOSTROPHES/SINGLE QUOTES IN THE JSON). You should ONLY output json data, with this format: '
-      + _format)
-
-  return render_template("json.html", JSON=data)
+    survey = await generate_survey(prompt, system_prompt)
+    return render_template('json.html', survey_json=json.dumps(survey, indent=2))
 
 
 @app.route('/update', methods=['POST'])
 async def update():
-  json = request.form['json']
-  prompt = request.form['prompt']
+    """Modify existing survey JSON according to user instructions."""
+    current_json = request.form.get('json') or abort(400, description="Missing JSON payload")
+    prompt = request.form.get('prompt') or abort(400, description="Missing prompt")
 
-  data = await generate(
-      prompt,
-      'Your job is to modify the following json according to the user input, but ONLY do what the user tells you to. If you are not told to remove something, dont remove it. Only change, add, or remove, what the user tells you to: '
-      + json +
-      " And this is the format of how the surveys are constructed: " +
-      _format)
+    system_prompt = (
+        'Modify the following survey JSON only as instructed. Do not remove or change anything else. '
+        f'Current JSON: {current_json} Format: {json.dumps(SURVEY_FORMAT)}'
+    )
 
-  return render_template("json.html", JSON=data)
+    updated = await generate_survey(prompt, system_prompt)
+    return render_template('json.html', survey_json=json.dumps(updated, indent=2))
 
 
-app.run("0.0.0.0", 80)
+if __name__ == '__main__':
+    port = int(os.getenv('PORT', 80))
+    app.run(host='0.0.0.0', port=port, debug=False)
